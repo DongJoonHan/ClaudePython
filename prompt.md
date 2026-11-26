@@ -339,3 +339,28 @@ PR #1을 Squash로 병합하고, `docs/swe1-requirements` 브랜치에서 1단�
 - 사람 검토자의 서명과 G1 수용
 
 ---
+
+## 16. Prompt
+
+병합하고 2단계 진행해
+
+### Answer (2단계 SWE.2·SWE.3 보고)
+
+PR #2를 병합하고 `BL-SWR-1.0` 태그를 달았습니다. `docs/swe2-swe3-design` 브랜치에서 2단계를 진행했습니다.
+
+**산출물**
+- `docs/02_swe2_architecture/아키텍처설계서.md` (SWA-ECL-001): 구성요소 C0~C7, 의존도, 인터페이스 표, 틱 시퀀스도, 상태도, 안전 설계(SW 경계, 공존, 사전 존재 SW), SWR 양방향 할당
+- `docs/03_swe3_detailed_design/상세설계서.md` (SWD-ECL-001): 단위 U0~U7의 타입, 시그니처, 의사코드, 예상 복잡도, 시험 설계, 설계 파생 요구 DD-01~06, 설계 해석 DI-01~05, 함수 단위 추적
+- `docs/03_swe3_detailed_design/정적분석계획.md` (SAP-ECL-001): ISO 26262-6 Table 1 대응, Python 안전 부분집합 PS-01~12, mypy 추가, 도구 신뢰 수준
+- `docs/02_swe2_architecture/설계검토기록.md` (DRV-ECL-001)
+- SWRS 1.1: CR-01~04
+
+**독립 설계 검토:** 2회, 18건을 조치했습니다. 핵심은 다음과 같습니다.
+- 시각 경계를 float로 비교해 결과가 달라짐 → 정수 µs로 바꿈
+- 큰 정수 입력에서 OverflowError로 응답이 끊김
+- DEGRADED 중 override가 되살아남
+- PENDING 중 운전자 해제를 두고 요구가 충돌
+
+**사람이 판단할 것:** 사내 기술 검토 서명, OEM G2 수용, Q-22 OEM 확인
+
+---

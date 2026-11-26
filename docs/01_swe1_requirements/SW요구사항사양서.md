@@ -3,7 +3,7 @@
 | 항목 | 내용 |
 |---|---|
 | 문서 ID | SWRS-ECL-001 |
-| 버전 | 1.0 (기준선 BL-SWR-1.0 후보) |
+| 버전 | 1.1 (기준선 BL-SWR-1.1 후보) |
 | 상위 문서 | OEM-SWR-001 OEM SW 요구사항 사양서 Rev 1.0 (BL-OEM-1.0) |
 | 관련 문서 | QA-ECL-001 질의 및 가정 목록, UC-ECL-001 Use Case, TRC-ECL-001 추적성 매트릭스, RVW-ECL-001 검토 기록 |
 | 프로세스 | A-SPICE SWE.1 |
@@ -11,7 +11,8 @@
 | 버전 | 내용 |
 |---|---|
 | 0.1 | 초안 |
-| 1.0 | 독립 검토 RV-01~RV-20, 재검토 RV-21~RV-23 반영 (RVW-ECL-001) |
+| 1.0 | 독립 검토 RV-01~RV-20, 재검토 RV-21~RV-23 반영 (RVW-ECL-001). 기준선 BL-SWR-1.0 |
+| 1.1 | CR-01: SWR-004를 "상위 규칙이 걸린 도어에는 명령 미적용"으로 개정하고 나올 수 없는 거절 이유 코드 3개 삭제. SWR-002 문구 정리.<br>CR-02: SWR-004와 SWR-008의 PENDING 충돌 해소. 5순위 의미를 "QM 최상위 결과가 LOCK이면 유지"로 확정하고 세 규칙 조합 기대값 표 추가(SWR-019).<br>CR-03: SWR-010 기록 조건의 "바뀐 것" 범위, input_validity의 "거절된 명령" 범위, 시작 시 reason(IGNITION_OFF), 10 s 초과 시 override 초기화를 명확화.<br><br>CR-04: SW 시계의 범위(0~1e9 s)와 해상도(1 µs), SWR-015의 400 조건(인코딩 오류, 과도한 중첩, 본문 크기) 명시.<br>기준선 BL-SWR-1.1 후보 |
 
 ## 1. 범위
 
@@ -23,7 +24,7 @@
 
 | 용어 | 정의 |
 |---|---|
-| SW 시계 (now_s) | SW에 주입되는 단조 증가 시각(초). SIL과 Web에서는 시험자가 제공하는 시뮬레이션 시각이다. 실제 벽시계를 쓰지 않는다 |
+| SW 시계 (now_s) | SW에 주입되는 단조 증가 시각(초). SIL과 Web에서는 시험자가 제공하는 시뮬레이션 시각이다. 실제 벽시계를 쓰지 않는다. **범위는 0 이상 1e9 이하, 해상도는 1 µs**이다. 1 µs 단위로 반올림한 값이 직전 틱보다 커야 한다 (CR-04) |
 | 평가주기 (틱) | SW가 판정을 한 번 수행하는 단위. 10 ms 간격으로 호출된다고 가정한다 (Q-08). 틱마다 VehicleSnapshot이 0건 또는 1건 들어온다 |
 | 반영 주기 | VehicleSnapshot이 들어온 바로 그 틱. 입력은 반영 주기의 출력에 반영된다. OEM 문서의 "다음 평가주기"와 "첫 평가주기"는 모두 반영 주기를 뜻한다 |
 | 지연 | 반영 주기의 now_s에서 출력이 결정된 틱의 now_s까지의 시간 |
@@ -76,7 +77,7 @@
 | reason_code | priority_reason과 같은 값 (OEM-IF-006 "priority_reason을 reason_code로도 매핑") | OEM-IF-006 |
 | warning_code | sensor_fault 유효값이 TRUE이면 state와 관계없이 SENSOR_FAULT, 그 외에는 NONE | OEM-SR-004 |
 
-- **input_validity:** 갱신 지연이면 STALE, 이번 틱의 입력에 오류 필드나 거절된 명령이 있으면 INVALID, 그 외에는 VALID이다. STALE이 INVALID보다 우선한다.
+- **input_validity:** 갱신 지연이면 STALE, 이번 틱의 입력에 오류 필드나 형식 오류 명령이 있거나 순서 무효 스냅샷이면 INVALID, 그 외에는 VALID이다. STALE이 INVALID보다 우선한다. 형식이 올바른 명령이 상위 규칙 때문에 적용되지 않은 것은 INVALID가 아니다.
 
 ### 3.4 이유 코드
 
@@ -94,9 +95,6 @@
 | AUTO_LOCK_SPEED | 차속 3 km/h 이상 자동 잠금 | SWR-003 |
 | ADULT_PRESENT_RELEASE | 성인 탑승 강제 해제 | SWR-017 |
 | DRIVER_LOCK / DRIVER_RELEASE | 운전자 명령 적용 | SWR-001, 002 |
-| RELEASE_REJECTED_MOVING | 주행 중이라 운전자 해제 거절 | SWR-004 |
-| RELEASE_REJECTED_ISOFIX | ISOFIX 연결로 운전자 해제 거절 | SWR-004 |
-| COMMAND_REJECTED_STATE | state가 NORMAL이 아니라 운전자 명령 거절 | SWR-004 |
 | INPUT_INVALID | 오류 필드·명령이 있고 출력을 바꾼 규칙은 없음 | SWR-013 |
 | NO_CHANGE | 적용할 규칙이 없어 출력 유지 | SWR-019 |
 
@@ -125,10 +123,10 @@ state는 틱마다 아래 표를 위에서부터 차례로 검사해 처음 맞�
 - **상위:** OEM-FR-001 · **할당 ASIL:** QM · **검증:** 단위, SIL, Web
 
 ### SWR-002 운전자 해제 명령 처리
-- **요구:** SW는 4개 경로로 받은 운전자 해제 명령을 SWR-004의 해제 허용 조건을 만족하는 도어에만 적용해야 한다.
+- **요구:** SW는 4개 경로로 받은 운전자 해제 명령을 SWR-004의 적용 조건을 만족하는 도어에만 적용해야 한다.
 - **수용 기준:**
-  - 허용 조건을 만족하면 4개 경로 × 3개 side 조합에서 반영 주기에 선택된 출력만 RELEASE가 된다. 해당 도어의 reason은 DRIVER_RELEASE이다.
-  - 만족하지 못한 도어는 출력이 유지되고, 거절 이유 코드가 남는다.
+  - SWR-004의 적용 조건을 만족하면 4개 경로 × 3개 side 조합에서 반영 주기에 선택된 출력만 RELEASE가 된다. 해당 도어의 reason은 DRIVER_RELEASE이다.
+  - 만족하지 못한 도어는 SWR-004 표대로 상위 규칙이 출력과 reason을 정한다.
 - **상위:** OEM-FR-001 · **할당 ASIL:** QM · **검증:** 단위, SIL, Web
 
 ### SWR-003 차속 자동 잠금
@@ -139,20 +137,21 @@ state는 틱마다 아래 표를 위에서부터 차례로 검사해 처음 맞�
   - SWR-019의 상위 순위 규칙(1~8순위)이 걸린 도어는 그 규칙을 따른다.
 - **상위:** OEM-FR-002 · **할당 ASIL:** QM · **검증:** 단위, SIL · **가정:** Q-04, Q-08
 
-### SWR-004 운전자 해제 허용 조건
-- **요구:** SW는 운전자 명령을 도어별로 다음 조건으로 판정해야 한다.
-  1. state=NORMAL이 아니면 lock과 unlock 모두 거절한다.
-  2. unlock은 유효 차속 < 3.0 km/h일 때만 허용한다.
-  3. unlock은 대상 도어의 ISOFIX=FALSE일 때만 허용한다.
-- **수용 기준:** 각 조건을 하나씩만 어긴 경우에, 해당 도어 출력이 유지되고 아래 이유 코드가 남는다. side=all이면 좌/우를 따로 판정하고, 한쪽만 거절되면 다른 쪽은 적용한다.
+### SWR-004 운전자 명령 적용 조건
+- **요구:** SW는 운전자 명령을, 대상 도어에 SWR-019의 1~4순위와 6~10순위 규칙이 하나도 걸리지 않을 때만 적용해야 한다. 상위 규칙이 걸린 도어에서는 명령을 적용하지 않고, 그 도어의 출력과 reason을 상위 규칙이 정한다. 5순위(PENDING)는 LOCK 결과에만 걸리므로, PENDING 중에도 운전자 unlock은 적용하고 운전자 lock은 적용하지 않는다(SWR-008).
+- **수용 기준:** 아래 각 조건에서 명령 대상 도어의 출력과 reason이 표와 같다. side=all이면 좌/우를 따로 판정하고, 한쪽에만 상위 규칙이 걸리면 다른 쪽에는 명령을 적용한다.
 
-  | 어긴 조건 | 이유 코드 |
-  |---|---|
-  | 1 (state가 OFF, DEGRADED, FAULT, EMERGENCY 각각) | COMMAND_REJECTED_STATE |
-  | 2 (차속 3.0 이상) | RELEASE_REJECTED_MOVING |
-  | 3 (ISOFIX 연결) | RELEASE_REJECTED_ISOFIX |
+  | 조건 | 명령 | 대상 도어 출력 | reason |
+  |---|---|---|---|
+  | state=OFF (시동 꺼짐) | lock | RELEASE | IGNITION_OFF |
+  | state=DEGRADED | lock, unlock | 직전 값 유지 | INPUT_STALE |
+  | state=FAULT | lock, unlock | 직전 값 유지 | SENSOR_FAULT |
+  | state=EMERGENCY | lock | RELEASE | CRASH_CONFIRMED |
+  | 유효 차속 ≥ 3.0 km/h | unlock | LOCK | AUTO_LOCK_SPEED |
+  | 대상 도어 ISOFIX=TRUE | unlock | LOCK | ISOFIX_LOCK |
+  | 대상 도어 접근위험=TRUE | unlock | LOCK | APPROACH_RISK_LOCK 또는 OVERRIDE_REQUESTED (SWR-005·006) |
 
-  접근위험 도어에 대한 unlock은 SWR-005·006에서 처리한다(상위 순위).
+- **개정 사유 (1.1):** 1.0의 거절 이유 코드(COMMAND_REJECTED_STATE, RELEASE_REJECTED_MOVING, RELEASE_REJECTED_ISOFIX)는 나올 수 없는 코드였다. 각 거절 조건에서는 SWR-019의 상위 규칙이 먼저 도어를 결정하기 때문이다. 설계(SWE.3) 중 발견했다(CR-01).
 - **상위:** OEM-FR-001 · **할당 ASIL:** QM · **검증:** 단위, SIL · **가정:** Q-09, Q-12
 
 ### SWR-005 후측방 접근위험 잠금 및 해제 억제
@@ -168,7 +167,7 @@ state는 틱마다 아래 표를 위에서부터 차례로 검사해 처음 맞�
 - **요구:** SW는 접근위험으로 해제가 억제된 도어에 같은 도어를 대상으로 하는 unlock이 10초 이하 안에 다시 들어오면 명시적 override 요청으로 인정해야 한다.
 - **수용 기준:**
   - 처음 억제한 시각부터 경과 시간 ≤ 10.0 s인 재입력에서 override_*=TRUE가 되고, 해당 도어 reason은 OVERRIDE_REQUESTED이다. 10.0 s 정각은 인정한다.
-  - 10.0 s를 넘긴 재입력은 새 첫 요청으로 다시 억제하고, 억제 시각을 그 시각으로 갱신한다.
+  - 10.0 s를 넘긴 재입력은 새 첫 요청으로 다시 억제하고, 억제 시각을 그 시각으로 갱신하며, override_*를 FALSE로 되돌린다(Q-22).
   - 접근위험이 TRUE인 동안 출력은 LOCK을 유지한다(Q-01).
   - 해당 도어의 접근위험이 FALSE가 되는 반영 주기에 override_*와 억제 시각을 지운다. 그 뒤 해제하려면 운전자가 다시 unlock해야 한다(SWR-002).
   - state가 OFF가 되면 override_*를 지운다.
@@ -243,7 +242,7 @@ state는 틱마다 아래 표를 위에서부터 차례로 검사해 처음 맞�
   | 2 | 갱신 지연 (SWR-013) | 좌/우 출력 유지 | B |
   | 3 | 도어별 접근위험 (SWR-005, 006) | 해당 도어 LOCK | B |
   | 4 | sensor_fault=TRUE (SWR-021) | 3순위가 아닌 도어의 출력 유지 | B |
-  | 5 | 충돌 PENDING (SWR-008) | 6~11순위가 LOCK을 만드는 도어는 출력 유지. RELEASE를 만드는 도어는 그대로 적용 | B |
+  | 5 | 충돌 PENDING (SWR-008) | 6~11순위 중 그 도어에 걸린 **가장 높은 순위**의 결과가 LOCK이면 출력 유지(아래 순위로 넘어가지 않음). RELEASE이면 그대로 적용 | B |
   | 6 | ignition_on=FALSE (SWR-020) | 좌/우 RELEASE | QM |
   | 7 | 화재·과온 (SWR-017) | 좌/우 RELEASE | QM |
   | 8 | 도어별 ISOFIX (SWR-018) | 해당 도어 LOCK | QM |
@@ -256,7 +255,13 @@ state는 틱마다 아래 표를 위에서부터 차례로 검사해 처음 맞�
 - **수용 기준:**
   - 1~11순위 규칙에서 두 규칙을 동시에 거는 모든 쌍(55쌍)에서, 각 도어의 출력과 reason이 순위가 높은 규칙의 결과와 같다.
   - 예외 규칙은 해당 쌍에서 예외대로 동작한다: 5순위는 LOCK만 무효화하고, 4순위는 3순위 도어를 제외한다.
-  - 5순위 예외는 세 규칙 조합으로도 검증한다: PENDING + 8순위 ISOFIX(LOCK) + 7순위 화재(RELEASE)와 PENDING + 9순위 차속(LOCK) + 11순위 운전자 해제.
+  - 5순위 예외는 아래 세 규칙 조합으로도 검증한다 (직전 출력은 좌/우 RELEASE, state=NORMAL).
+
+    | 조합 | 왼쪽 도어 | 오른쪽 도어 |
+    |---|---|---|
+    | PENDING + isofix_left + 화재 | RELEASE, FIRE_RELEASE (7순위가 최상위) | RELEASE, FIRE_RELEASE |
+    | PENDING + 차속 5.0 km/h + 운전자 unlock(all) | RELEASE 유지, CRASH_PENDING (최상위 9순위가 LOCK) | RELEASE 유지, CRASH_PENDING |
+    | PENDING + isofix_left + 성인 탑승 | RELEASE 유지, CRASH_PENDING (최상위 8순위가 LOCK) | RELEASE, ADULT_PRESENT_RELEASE |
   - priority_reason과 reason_code는 3.3절 규칙에 따른다.
 - **상위:** OEM-SR-001, SR-002, SR-003, SR-004, FR-001, FR-002, FR-003, FR-005, FR-006, FR-007 (파생) · **할당 ASIL:** B · **검증:** 단위, SIL · **가정:** Q-01~Q-07, Q-14, Q-16~Q-18
 
@@ -267,7 +272,7 @@ state는 틱마다 아래 표를 위에서부터 차례로 검사해 처음 맞�
   - state는 4장 상태 결정표에 따른다(EMERGENCY, DEGRADED, FAULT가 아니면 OFF).
   - state가 OFF가 되면 override를 지운다(SWR-006).
   - EMERGENCY 래치는 SWR-007의 해제 조건으로만 지운다.
-  - 시스템 시작 시 초기 상태도 RELEASE/OFF이다.
+  - 시스템 시작 시 첫 틱 전의 상태 조회 결과도 RELEASE/OFF이고, reason은 IGNITION_OFF이다.
 - **상위:** OEM-FR-007 · **할당 ASIL:** QM · **검증:** 단위, SIL, Web · **가정:** Q-06, Q-13, Q-16
 
 ### SWR-021 센서 고장 시 출력 유지
@@ -285,7 +290,7 @@ state는 틱마다 아래 표를 위에서부터 차례로 검사해 처음 맞�
 ### SWR-010 결정 기록 생성과 식별자
 - **요구:** SW는 다음 두 경우에 결정 기록을 하나 만들고, 고유하고 단조 증가하는 event_id를 붙여야 한다.
   1. VehicleSnapshot을 처리한 틱. 오류 필드가 있는 입력도 포함한다.
-  2. 입력이 없는 틱이지만 출력이나 state가 바뀐 틱 (예: DEGRADED 전이)
+  2. 입력이 없는 틱이지만 lock_left, lock_right, override_left, override_right, state 중 하나가 바뀐 틱 (예: DEGRADED 전이). reason, input_validity, warning_code만 바뀐 틱은 기록하지 않는다
 - **수용 기준:**
   - VehicleSnapshot N건을 처리하면 기록이 N건 생긴다.
   - 입력 없이 DEGRADED로 바뀐 틱에도 1건이 생기고, 입력 없이 아무것도 바뀌지 않은 틱에는 생기지 않는다.
@@ -320,7 +325,7 @@ state는 틱마다 아래 표를 위에서부터 차례로 검사해 처음 맞�
   | `POST /api/tick` 본문 `{"now_s": 수, "snapshot": 객체 또는 null}` | 한 틱을 판정한다 | 200, 3.3절 출력 JSON |
   | `GET /api/status` | 상태를 조회한다 (SWR-014) | 200, 3.3절 출력 JSON |
   | `GET /api/events` | 기록을 조회한다 (SWR-012) | 200, 기록 배열 JSON (event_id 오름차순) |
-  | 본문이 JSON이 아니거나 now_s가 없음·비유한수·직전 now_s 이하 | 틱을 진행하지 않는다 | 400 |
+  | 본문이 UTF-8 JSON 객체가 아님(인코딩 오류, 과도한 중첩 포함), now_s가 없음·숫자 아님·범위(0~1e9) 밖, 1 µs 단위로 반올림한 now_s가 직전 이하, 본문 64 KiB 초과 | 틱을 진행하지 않는다 | 400 |
   | snapshot 안의 필드 오류 | SWR-013대로 처리한다 | 200 (input_validity=INVALID) |
   | 응답 직렬화 실패 | — | 500 |
 
