@@ -179,3 +179,27 @@ superpowers의 `test-driven-development` 스킬을 프로젝트 스킬로 설치
 - **예외:** 스킬이 허용하는 예외(일회성 프로토타입, 생성 코드, 설정 파일)도 사용자에게 먼저 묻게 했습니다.
 
 ---
+
+## 8. Prompt
+
+지금까지의 변경사항 커밋/푸시해줘
+
+### Answer
+
+로컬 커밋 `7b167a8`을 만들었습니다(59개 파일). 푸시는 GitHub 로그인이 필요해서, 사용자가 `! gh auth login`과 `! gh auth setup-git`을 실행하도록 요청했습니다.
+
+- **제외:** 평가 실행 결과물(`sw-system-test-case-workspace/`)은 생성물이라 `.gitignore`로 뺐습니다.
+- **삭제:** 평가 서브에이전트가 저장소 최상위에 남긴 0바이트 `gen_testcases.py`를 삭제했습니다.
+- **작성자:** 이 저장소에만 `DongJoonHan`과 계정 이메일로 설정했습니다.
+
+---
+
+## 9. Prompt
+
+다했다
+
+### Answer
+
+gh 로그인(계정 DongJoonHan)과 git 인증 연결을 확인했습니다. prompt.md 기록을 추가 커밋하고, 두 커밋을 `origin/main`에 푸시했습니다.
+
+---
