@@ -1,0 +1,5 @@
+# 개발·CI 도구 (버전 고정). 런타임 의존성은 없다 (pyproject.toml dependencies = []).
+pytest==9.2.0
+pytest-cov==7.1.0
+ruff==0.17.6
+cyclonedx-bom==9.0.0
