@@ -807,16 +807,24 @@ def _launch(p: int, cwd: Path, tmp: Path) -> subprocess.Popen:
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
+    # 준비 확인은 TCP 연결이 아니라 실제 HTTP 응답(200)으로 한다.
+    # Windows에서는 종료된 이전 프로세스의 리스닝 소켓이 잠시 남아 연결만
+    # 성공하고 첫 요청이 리셋될 수 있다 (Jenkins PR-7 #1에서 관측).
     deadline = time.monotonic() + 20
     while True:
         try:
-            socket.create_connection(("127.0.0.1", p), timeout=1).close()
-            return proc
+            conn = http.client.HTTPConnection("127.0.0.1", p, timeout=2)
+            conn.request("GET", "/api/status")
+            ok = conn.getresponse().status == 200
+            conn.close()
+            if ok:
+                return proc
         except OSError:
-            if time.monotonic() > deadline or proc.poll() is not None:
-                proc.kill()
-                raise
-            time.sleep(0.05)
+            pass
+        if time.monotonic() > deadline or proc.poll() is not None:
+            proc.kill()
+            raise TimeoutError(f"childlock 서버가 포트 {p}에서 준비되지 않음")
+        time.sleep(0.05)
 
 
 def _stop(proc: subprocess.Popen) -> None:
@@ -849,6 +857,8 @@ def test_stc_f_055_restart_is_volatile(tmp_path):
         assert len(events(p)) == 30
     finally:
         _stop(proc)
+    # 재시작은 새 포트로 한다 (이전 리스닝 소켓 잔류와 무관하게 판정)
+    p = _free_port()
     proc = _launch(p, cwd, tmp)
     try:
         assert events(p) == []
