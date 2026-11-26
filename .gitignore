@@ -1,3 +1,12 @@
+# OEM 입력 문서: 교육 과정 밖 배포 금지 (Synetics 저작권) — 저장소에 올리지 않는다
+OEM/
+
+# 테스트·커버리지 산출물
+.coverage
+coverage.xml
+reports/
+.venv/
+
 # Skill eval run outputs (generated; reproducible from evals/)
 .claude/skills/*-workspace/
 
