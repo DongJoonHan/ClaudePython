@@ -8,6 +8,8 @@ ClaudePython: AI를 이용한 파이썬 코드(강사용). 강의용 Python 예�
 
 현재 과제: OEM-SWR-001(전자식 차일드락 제어 SW, ASIL B 안전 요구 포함)을 Python PC/SIL 참조 구현과 Web 시뮬레이터로 개발한다.
 - 진행 계획과 프로젝트 결정 사항(D-01~D-06)은 `docs/00_plan/개발계획서.md`에 있다.
+- **현재 상태:** 개발 0~5단계를 모두 마쳤다(기준선 `BL-VER-1.0`). 남은 일은 OEM 질의 Q-01~Q-26 회신 반영, 사람의 검토 서명, OEM Gate G1~G4 수용이다. 회신으로 요구가 바뀌면 SWRS를 개정하고, 해당 시험을 먼저 고친 뒤(TDD) 구현을 고친다.
+- **시험 실행 시간:** 전체(`python -m pytest`)는 약 3.5분이다. 시스템 시험만 돌리려면 `python -m pytest tests/system`.
 - 입력 문서는 `OEM/`에 있다. 교육 과정 밖 배포가 금지된 문서라 `.gitignore`로 제외하고, GitHub 저장소는 비공개로 운영한다.
 
 ## 개발 환경
