@@ -364,3 +364,36 @@ PR #2를 병합하고 `BL-SWR-1.0` 태그를 달았습니다. `docs/swe2-swe3-de
 **사람이 판단할 것:** 사내 기술 검토 서명, OEM G2 수용, Q-22 OEM 확인
 
 ---
+
+## 17. Prompt
+
+Jenkins는 api key는 다음과 같아. [보안상 기록에서 가림 — git에 저장하지 말라는 지시] 이 값은 git에 저장하지마. jenkins 접속 주소는 http://172.16.7.129 CI부터 설정하고 다음 단계 진행해
+
+### Answer
+
+- **토큰 보호:** API 토큰은 git과 저장소 파일 어디에도 남기지 않습니다. 이 기록에서도 가렸습니다.
+- **Jenkins 확인:** 2.580.2에 접속됩니다. 익명 조회는 막혀 있습니다.
+- **사용자 선택:** Jenkins ID는 `admin`, GitHub 인증은 현재 gh 로그인 토큰 사용입니다. 권한이 넓어 권장하지 않았지만 사용자가 선택했습니다.
+- **막힌 작업:** 토큰을 Windows 사용자 환경 변수에 저장하는 명령이 권한 정책(민감 정보 저장)에 막혔습니다. 사용자가 직접 저장하도록 요청했습니다.
+- **먼저 진행한 것:** PR #3 병합, 기준선 태그 `BL-SWR-1.1`, `BL-SWA-1.0`, `BL-SWD-1.0`
+
+---
+
+## 18. Prompt
+
+했어
+
+(진행 중 추가 지시) 이후 단계는 승인없이 계속 끝까지 진행해.
+
+### Answer (CI 구성 보고)
+
+- **Jenkins 환경:** 인증을 확인했습니다. Jenkins는 이 PC의 Windows 서비스(LocalSystem)이고 빌드 노드는 Windows 11입니다.
+- **GitHub 인증:** gh 토큰을 Jenkins Credentials `github-claudepython`에 등록했습니다. 토큰 값은 출력하지 않았습니다.
+- **Jenkins 작업:** Multibranch Pipeline `ClaudePython`을 만들었습니다. GitHub Branch Source로 5분마다 스캔합니다. 기존 Freestyle 작업 `CluadePython`은 건드리지 않았습니다.
+- **Jenkinsfile:** Windows `bat`으로 바꾸고 mypy 단계를 추가했습니다.
+- **Ruff 강화:** ANN, S, BLE, PLW, TID, RUF 규칙과 금지 API를 추가했습니다(SAP-ECL-001).
+- **도구 코드 수정:** 강화된 규칙이 check_metrics의 `end_lineno` None 처리 누락과 타입 표기 문제를 찾아냈습니다. TDD로 고쳤습니다.
+- **첫 빌드:** `ci/jenkins-windows` #1 SUCCESS. 테스트 19개, 브랜치 커버리지 100%, 결과를 GitHub 커밋 상태로 보고했습니다.
+- **추가 지시:** 이후 단계는 승인 없이 끝까지 진행합니다.
+
+---
