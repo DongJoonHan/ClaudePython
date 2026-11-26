@@ -40,11 +40,11 @@
   1. 운전자가 side(left/right/all)와 action(lock/unlock)을 골라 명령한다.
   2. SW는 명령 형식을 검사한다(SWR-013).
   3. lock이면 선택 도어를 LOCK으로 한다(SWR-001).
-  4. unlock이면 해제 허용 조건(SWR-004)을 도어별로 판정해, 허용된 도어만 RELEASE로 한다(SWR-002).
+  4. unlock이면 적용 조건(SWR-004)을 도어별로 판정해, 상위 규칙이 걸리지 않은 도어만 RELEASE로 한다(SWR-002).
   5. 결정 기록을 남긴다(SWR-010~012).
 - **대체 흐름:**
-  - 차속 ≥ 3.0 km/h에서 unlock: 거절(RELEASE_REJECTED_MOVING)
-  - ISOFIX가 연결된 도어 unlock: 거절(RELEASE_REJECTED_ISOFIX)
+  - 차속 ≥ 3.0 km/h에서 unlock: 자동 잠금이 우선해 LOCK 유지(AUTO_LOCK_SPEED)
+  - ISOFIX가 연결된 도어 unlock: ISOFIX 잠금이 우선해 LOCK 유지(ISOFIX_LOCK)
   - 접근위험 도어 unlock: UC-03으로 진행
 - **사후 조건:** 선택하지 않은 도어의 출력은 바뀌지 않는다(SWR-009).
 
