@@ -1,0 +1,85 @@
+{
+  "model_file": "D:\\Repo\\ClaudePython\\docs\\06_swe6_verification\\model_PW-01.txt",
+  "model_text": "source: physical_button, avn, voice, mobile_app\r\nside: left, right, all\r\nprior_left: RELEASE, LOCK\r\nprior_right: RELEASE, LOCK\r\n",
+  "command": "pict model_PW-01.txt /o:2 /r:7",
+  "header": [
+    "source",
+    "side",
+    "prior_left",
+    "prior_right"
+  ],
+  "rows": [
+    {
+      "source": "voice",
+      "side": "all",
+      "prior_left": "LOCK",
+      "prior_right": "RELEASE"
+    },
+    {
+      "source": "physical_button",
+      "side": "right",
+      "prior_left": "LOCK",
+      "prior_right": "LOCK"
+    },
+    {
+      "source": "physical_button",
+      "side": "all",
+      "prior_left": "RELEASE",
+      "prior_right": "LOCK"
+    },
+    {
+      "source": "mobile_app",
+      "side": "left",
+      "prior_left": "RELEASE",
+      "prior_right": "RELEASE"
+    },
+    {
+      "source": "avn",
+      "side": "left",
+      "prior_left": "LOCK",
+      "prior_right": "LOCK"
+    },
+    {
+      "source": "voice",
+      "side": "right",
+      "prior_left": "RELEASE",
+      "prior_right": "RELEASE"
+    },
+    {
+      "source": "physical_button",
+      "side": "left",
+      "prior_left": "RELEASE",
+      "prior_right": "RELEASE"
+    },
+    {
+      "source": "mobile_app",
+      "side": "all",
+      "prior_left": "LOCK",
+      "prior_right": "LOCK"
+    },
+    {
+      "source": "voice",
+      "side": "left",
+      "prior_left": "LOCK",
+      "prior_right": "LOCK"
+    },
+    {
+      "source": "mobile_app",
+      "side": "right",
+      "prior_left": "RELEASE",
+      "prior_right": "LOCK"
+    },
+    {
+      "source": "avn",
+      "side": "all",
+      "prior_left": "RELEASE",
+      "prior_right": "RELEASE"
+    },
+    {
+      "source": "avn",
+      "side": "right",
+      "prior_left": "LOCK",
+      "prior_right": "LOCK"
+    }
+  ]
+}
