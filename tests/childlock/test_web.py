@@ -207,3 +207,66 @@ def test_module_entry_point_runs_main(monkeypatch):
         runpy.run_module("childlock", run_name="__main__")
     assert exc.value.code == 0
     assert seen == [("127.0.0.1", 8001)]
+
+
+def test_huge_content_length_digits_is_400(server):
+    # CR-02: 4,300자리를 넘는 숫자도 500이 아니라 400
+    port, _ = server
+    reply = raw_request(
+        port,
+        b"POST /api/tick HTTP/1.0\r\nContent-Length: "
+        + b"0" * 5000
+        + b"5\r\n\r\n",
+    )
+    assert reply.startswith(b"HTTP/1.0 400")
+
+
+def test_truncated_body_times_out_with_400_and_server_stays_responsive():
+    # CR-04: 선언보다 짧은 본문은 제한 시간 뒤 400, 서버는 계속 응답한다
+    controller = ChildLockController()
+    httpd = HTTPServer(
+        ("127.0.0.1", 0), web.make_handler(controller, timeout_s=0.3)
+    )
+    thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+    thread.start()
+    port = httpd.server_address[1]
+    try:
+        reply = raw_request(
+            port,
+            b"POST /api/tick HTTP/1.0\r\nContent-Length: 100\r\n\r\n0123456789",
+        )
+        assert reply.startswith(b"HTTP/1.0 400")
+        assert request(port, "GET", "/api/status")[0] == 200
+    finally:
+        httpd.shutdown()
+        httpd.server_close()
+
+
+def test_large_body_still_gets_400(server):
+    # CR-05: 수 MB 본문에도 연결 중단이 아니라 400 응답을 받는다
+    port, _ = server
+    body = b'{"now_s": 1.0, "pad": "' + b"x" * 3_000_000 + b'"}'
+    assert request(port, "POST", "/api/tick", body)[0] == 400
+
+
+def test_oversized_body_closed_early_still_gets_400(server):
+    # CR-05: 버리는 도중 클라이언트가 본문 전송을 끝내도(EOF) 400을 보낸다
+    port, _ = server
+    with socket.create_connection(("127.0.0.1", port), timeout=5) as s:
+        s.sendall(b"POST /api/tick HTTP/1.0\r\nContent-Length: 200000\r\n\r\n")
+        s.sendall(b"x" * 70_000)
+        s.shutdown(socket.SHUT_WR)
+        reply = s.recv(4096)
+    assert reply.startswith(b"HTTP/1.0 400")
+
+
+def test_body_shorter_than_declared_is_400_even_if_valid_json(server):
+    # DD-07: 선언보다 짧게 보내고 닫은 본문은 형식이 맞아도 400
+    port, controller = server
+    with socket.create_connection(("127.0.0.1", port), timeout=5) as s:
+        s.sendall(b"POST /api/tick HTTP/1.0\r\nContent-Length: 100\r\n\r\n")
+        s.sendall(b'{"now_s": 1.0}')
+        s.shutdown(socket.SHUT_WR)
+        reply = s.recv(4096)
+    assert reply.startswith(b"HTTP/1.0 400")
+    assert controller.events() == ()

@@ -15,7 +15,13 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from importlib import resources
 
 from childlock.controller import ChildLockController
-from childlock.model import MAX_BODY_BYTES, TickRejectedError
+from childlock.model import (
+    MAX_BODY_BYTES,
+    MAX_DISCARD_BYTES,
+    MAX_LENGTH_DIGITS,
+    REQUEST_TIMEOUT_S,
+    TickRejectedError,
+)
 
 _JSON = "application/json; charset=utf-8"
 _HTML = "text/html; charset=utf-8"
@@ -108,14 +114,14 @@ class _Handler(BaseHTTPRequestHandler):
     def _read_json_body(self) -> dict[str, object] | None:
         """!
         @brief 본문을 읽어 now_s가 있는 JSON 객체로 해석한다.
-        @return 해석한 객체, 형식 오류면 None (DD-03, DR-17)
+        @return 해석한 객체, 형식 오류면 None (DD-03, DD-07, DR-17)
         """
-        length = self.headers.get("Content-Length")
-        if length is None or not length.isdecimal():
+        size = self._content_length()
+        if size is None:
             return None
-        if int(length) > MAX_BODY_BYTES:
+        raw = self._read_body(size)
+        if raw is None:
             return None
-        raw = self.rfile.read(int(length))
         try:
             data = json.loads(raw.decode("utf-8"))
         except (ValueError, RecursionError):
@@ -124,6 +130,50 @@ class _Handler(BaseHTTPRequestHandler):
         if not isinstance(data, dict) or "now_s" not in data:
             return None
         return data
+
+    def _content_length(self) -> int | None:
+        """!
+        @brief Content-Length 헤더를 검사한다 (DD-03).
+        @return 본문 크기, 없거나 숫자가 아니거나 너무 길면 None
+        """
+        length = self.headers.get("Content-Length")
+        if length is None or not length.isdecimal():
+            return None
+        if len(length) > MAX_LENGTH_DIGITS:
+            # 아주 긴 숫자는 int() 자릿수 제한 전에 거절한다 (CR-02)
+            return None
+        return int(length)
+
+    def _read_body(self, size: int) -> bytes | None:
+        """!
+        @brief 본문을 정확히 size 바이트 읽는다.
+
+        상한을 넘으면 상한까지 읽어 버리고 연결을 닫는다(CR-05). 본문이
+        선언보다 짧아 제한 시간이 지나면 None이다(DD-07, CR-04).
+        @param size 선언된 본문 크기
+        @return 본문 바이트 또는 None
+        """
+        try:
+            if size > MAX_BODY_BYTES:
+                self.close_connection = True
+                self._discard(min(size, MAX_DISCARD_BYTES))
+                return None
+            raw = self.rfile.read(size)
+        except TimeoutError:
+            return None
+        return raw if len(raw) == size else None
+
+    def _discard(self, size: int) -> None:
+        """!
+        @brief 본문을 64 KiB씩 읽어서 버린다.
+        @param size 버릴 바이트 수
+        """
+        remaining = size
+        while remaining > 0:
+            chunk = self.rfile.read(min(remaining, MAX_BODY_BYTES))
+            if not chunk:
+                break
+            remaining -= len(chunk)
 
     def _send_json(self, payload: object) -> None:
         """!@brief 200 JSON 응답을 보낸다."""
@@ -145,10 +195,12 @@ class _Handler(BaseHTTPRequestHandler):
 
 def make_handler(
     controller: ChildLockController,
+    timeout_s: float = REQUEST_TIMEOUT_S,
 ) -> type[BaseHTTPRequestHandler]:
     """!
     @brief 제어기 하나에 묶인 요청 처리기 클래스를 만든다.
     @param controller 요청을 처리할 제어기
+    @param timeout_s 요청 소켓 제한 시간 (DD-07)
     @return BaseHTTPRequestHandler 하위 클래스
     """
 
@@ -156,6 +208,7 @@ def make_handler(
         """!@brief controller에 묶인 처리기."""
 
         bound_controller = controller
+        timeout = timeout_s
 
     return _BoundHandler
 

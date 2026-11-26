@@ -29,6 +29,12 @@ LATCH_RELEASE_US = 1_000_000
 EVENT_LOG_CAPACITY = 100
 ## HTTP 요청 본문 상한 64 KiB (DD-03)
 MAX_BODY_BYTES = 65_536
+## 상한을 넘는 본문을 400 응답 전에 읽어서 버리는 최대 크기 8 MiB (DD-03, CR-05)
+MAX_DISCARD_BYTES = 8 * 1024 * 1024
+## Content-Length 헤더의 최대 자릿수 (DD-03, CR-02)
+MAX_LENGTH_DIGITS = 10
+## HTTP 요청 소켓 제한 시간 (DD-07, CR-04)
+REQUEST_TIMEOUT_S = 5.0
 
 
 # ---------------------------------------------------------------- 열거형

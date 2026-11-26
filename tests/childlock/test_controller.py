@@ -188,3 +188,116 @@ def test_same_vector_gives_same_outputs_on_new_instances():
         return outs
 
     assert run() == run()
+
+
+def test_moving_vehicle_keeps_lock_when_input_goes_stale():
+    # CR-01: 주행 중(LOCK) 입력이 끊기면 DEGRADED에서도 LOCK 유지
+    c, _ = started(speed=50.0)
+    assert c.status().lock_left is Lock.LOCK
+    out = c.tick(0.25)
+    assert out.state is State.DEGRADED
+    assert (out.lock_left, out.lock_right) == (Lock.LOCK, Lock.LOCK)
+
+
+def test_moving_vehicle_keeps_lock_on_sensor_fault():
+    c, _ = started(speed=50.0)
+    out = c.tick(
+        0.01,
+        valid_raw(timestamp_s=0.01, vehicle_speed_kph=0.0, sensor_fault=True),
+    )
+    assert out.state is State.FAULT
+    assert (out.lock_left, out.lock_right) == (Lock.LOCK, Lock.LOCK)
+
+
+def test_suppression_during_off_does_not_start_override_window():
+    # CR-03: OFF 틱에서 기록한 억제 시각이 다음 틱으로 넘어가면 안 된다 (DI-02)
+    c = ChildLockController()
+    unlock = {"side": "left", "action": "unlock", "source": "avn"}
+    c.tick(
+        0.0,
+        valid_raw(
+            timestamp_s=0.0,
+            ignition_on=False,
+            rear_left_approach_risk=True,
+            driver_command=unlock,
+        ),
+    )
+    out = c.tick(
+        0.01,
+        valid_raw(
+            timestamp_s=0.01,
+            vehicle_speed_kph=0.0,
+            rear_left_approach_risk=True,
+            driver_command=unlock,
+        ),
+    )
+    assert out.state is State.NORMAL
+    assert out.override_left is False
+    assert out.reason_left is Reason.APPROACH_RISK_LOCK
+
+
+def test_emergency_clears_override(monkeypatch):
+    # CR-11·Q-24: EMERGENCY(전 도어 RELEASE)에서는 override 표시를 지운다
+    c, _ = started()
+    unlock = {"side": "right", "action": "unlock", "source": "avn"}
+    for i, now in enumerate((0.01, 0.02), start=1):
+        raw = valid_raw(
+            timestamp_s=float(i),
+            vehicle_speed_kph=0.0,
+            rear_right_approach_risk=True,
+            driver_command=unlock,
+        )
+        out = c.tick(now, raw)
+    assert out.override_right is True  # 오른쪽 override 출력 (CR-06 M7)
+    assert out.override_left is False
+    out = c.tick(
+        0.03,
+        valid_raw(
+            timestamp_s=3.0,
+            crash_status="CONFIRMED",
+            rear_right_approach_risk=True,
+        ),
+    )
+    assert out.state is State.EMERGENCY
+    assert out.override_right is False
+
+
+def test_stale_takes_priority_over_invalid():
+    # CR-06 M8: 같은 틱에 갱신 지연과 오류 필드가 함께 있으면 STALE
+    c, _ = started()
+    out = c.tick(0.25, valid_raw(timestamp_s=0.25, sensor_fault="x"))
+    assert out.input_validity is InputValidity.STALE
+
+
+def test_non_dict_snapshot_is_recorded():
+    # CR-06 M24: dict가 아닌 스냅샷도 처리한 입력이므로 기록 1건
+    c = ChildLockController()
+    out = c.tick(0.0, [])
+    assert out.input_validity is InputValidity.INVALID
+    assert len(c.events()) == 1
+
+
+def test_now_s_rounds_to_nearest_microsecond():
+    # CR-06 M6: 2.01 * 1e6 = 2009999.9999999998 → 2010000 µs (절단이면 2009999)
+    c = ChildLockController()
+    c.tick(2.01)
+    with pytest.raises(TickRejectedError):
+        c.tick(2.0100001)  # 2010000.1 → 2010000 µs, 직전과 같음
+
+
+def test_priority_tie_with_different_reasons_prefers_left():
+    # CR-06 M5: 같은 순위(3)에서 이유가 다르면 왼쪽 이유가 priority_reason
+    c, _ = started()
+    unlock = {"side": "left", "action": "unlock", "source": "avn"}
+    for i, now in enumerate((0.01, 0.02), start=1):
+        raw = valid_raw(
+            timestamp_s=float(i),
+            vehicle_speed_kph=0.0,
+            rear_left_approach_risk=True,
+            rear_right_approach_risk=True,
+            driver_command=unlock,
+        )
+        out = c.tick(now, raw)
+    assert out.reason_left is Reason.OVERRIDE_REQUESTED
+    assert out.reason_right is Reason.APPROACH_RISK_LOCK
+    assert out.priority_reason is Reason.OVERRIDE_REQUESTED

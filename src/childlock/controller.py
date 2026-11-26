@@ -60,7 +60,7 @@ class ChildLockController:
         decision = arbitrate(
             _arbitration_input(view, state, safety, self._output, now_us)
         )
-        safety = apply_memory(safety, decision)
+        safety = apply_memory(safety, decision, state)
         output = _build_output(decision, state, view, safety)
         # 반영 단계 (AP-03): 여기부터 self를 바꾼다
         record = parsed.present or _record_key(output) != _record_key(

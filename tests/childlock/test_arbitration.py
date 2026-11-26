@@ -283,3 +283,24 @@ def test_approach_lock_applies_during_fault():
         Reason.APPROACH_RISK_LOCK,
     )
     assert (d.right.lock, d.right.reason) == (Lock.RELEASE, Reason.SENSOR_FAULT)
+
+
+@pytest.mark.parametrize(
+    ("ranks", "reason"),
+    [
+        ((2,), Reason.INPUT_STALE),
+        ((4,), Reason.SENSOR_FAULT),
+        ((5, 9), Reason.CRASH_PENDING),
+        ((5, 8), Reason.CRASH_PENDING),
+        ((2, 7), Reason.INPUT_STALE),
+        ((4, 6), Reason.SENSOR_FAULT),
+    ],
+)
+def test_hold_rules_keep_previous_lock(ranks, reason):
+    # CR-01: 2·4·5순위는 직전 출력이 LOCK이면 LOCK을 유지해야 한다
+    # (직전 RELEASE로만 시험하면 "유지"와 "해제"를 구별하지 못한다)
+    inp = dataclasses.replace(
+        combine(*ranks), prev_left=Lock.LOCK, prev_right=Lock.LOCK
+    )
+    d = arbitrate(inp).left
+    assert (d.lock, d.reason) == (Lock.LOCK, reason)

@@ -174,5 +174,17 @@ def test_apply_memory_takes_memories_from_decision():
         left=DoorDecision(Lock.LOCK, Reason.APPROACH_RISK_LOCK, 3, new_l),
         right=DoorDecision(Lock.LOCK, Reason.OVERRIDE_REQUESTED, 3, new_r),
     )
-    st = apply_memory(SafetyState(latched=True), decision)
+    st = apply_memory(SafetyState(latched=True), decision, State.NORMAL)
     assert (st.latched, st.mem_left, st.mem_right) == (True, new_l, new_r)
+
+
+@pytest.mark.parametrize("st", [State.OFF, State.EMERGENCY])
+def test_apply_memory_discards_new_memory_in_clearing_states(st):
+    # CR-03, Q-24: OFF·EMERGENCY 틱이 끝날 때 기억은 비어 있다
+    mem = DoorMemory(suppressed_at_us=9, override=True)
+    decision = Decision(
+        left=DoorDecision(Lock.LOCK, Reason.APPROACH_RISK_LOCK, 3, mem),
+        right=DoorDecision(Lock.LOCK, Reason.APPROACH_RISK_LOCK, 3, mem),
+    )
+    out = apply_memory(SafetyState(), decision, st)
+    assert (out.mem_left, out.mem_right) == (DoorMemory(), DoorMemory())
