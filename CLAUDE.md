@@ -19,9 +19,12 @@ ClaudePython: AI를 이용한 파이썬 코드(강사용). 강의용 Python 예�
 - **단위 테스트:** pytest를 쓰고, 브랜치 커버리지는 pytest-cov로 측정한다. 측정 대상(`src`, `tools`)은 `pyproject.toml`에 설정돼 있다.
   - 전체 실행: `python -m pytest --cov --cov-branch --cov-report=term-missing --cov-fail-under=100`
   - 개별 실행: `python -m pytest tests/path/test_x.py::test_name`
-- **정적 분석:** Ruff를 쓴다. 설정은 `pyproject.toml`의 `[tool.ruff]`에 있다(줄 길이 80, C901 복잡도 10).
+- **정적 분석:** Ruff와 mypy를 쓴다. 설정은 `pyproject.toml`의 `[tool.ruff]`, `[tool.mypy]`에 있다. 규칙의 근거는 `docs/03_swe3_detailed_design/정적분석계획.md`(SAP-ECL-001)이다.
+  - Ruff: 줄 길이 80, C901 복잡도 10. `time`, `random`, `threading`, `os` 등은 banned-api로 금지돼 있다.
+  - mypy: strict, 명시적 Any 금지
   - 검사: `python -m ruff check .`
   - 포맷 확인: `python -m ruff format --check .`
+  - 타입 검사: `python -m mypy`
 - **함수 길이·주석률:** `python -m tools.check_metrics src tools`로 측정한다. 위반이 있으면 종료 코드가 1이다.
 - **디렉터리:**
 
@@ -116,18 +119,22 @@ ClaudePython: AI를 이용한 파이썬 코드(강사용). 강의용 Python 예�
 
 ## CI (Jenkins)
 
-- CI는 Jenkins를 쓴다. Jenkins 서버 주소는 `172.16.7.129`이다.
-- 파이프라인은 저장소 최상위의 `Jenkinsfile`에 정의하고, PR마다 아래 품질 게이트를 실행한다. 하나라도 실패하면 PR을 병합할 수 없다.
+- **서버:** Jenkins 2.580.2, `http://172.16.7.129`. 이 개발 PC에서 Windows 서비스(`Jenkins`, 계정 LocalSystem)로 동작한다. 빌드 노드는 내장 노드(Windows 11) 하나다.
+- **작업:** Multibranch Pipeline `ClaudePython`
+  - GitHub Branch Source로 저장소를 **5분마다 스캔**해 브랜치와 PR을 빌드한다. 사설 IP라 웹훅을 받을 수 없기 때문이다.
+  - 빌드 결과는 GitHub Branch Source가 GitHub 커밋 상태로 보고한다.
+  - 같은 서버에 있는 Freestyle 작업 `CluadePython`은 이 프로젝트와 무관한 기존 작업이라 건드리지 않는다.
+- **인증 정보 (git에 저장 금지):**
+  - Jenkins API: ID `admin`. 토큰은 Windows 사용자 환경 변수 `JENKINS_API_TOKEN`에만 있다. 명령에서 토큰 값을 직접 쓰지 말고 이 변수를 읽는다.
+  - GitHub: Jenkins Credentials `github-claudepython`(사용자명/비밀번호 형식, gh 로그인 토큰)
+- **파이프라인:** 저장소 최상위의 `Jenkinsfile`(Windows `bat`)이 아래 품질 게이트를 실행한다. 하나라도 실패하면 PR을 병합할 수 없다.
   1. `ruff check .`
   2. `ruff format --check .`
-  3. `python -m pytest --cov --cov-branch --cov-fail-under=100`
-  4. `python -m tools.check_metrics src tools`
-- 현재 `Jenkinsfile`은 Linux 에이전트에 `python3.12`가 있다고 가정하고 작성했으며, Jenkins에서 실제로 돌려 보지는 않았다.
-- 연동이 확정되기 전까지는 PR을 올리기 전에 위 게이트 4개를 로컬에서 실행하고, 결과를 PR 본문에 적는다.
-- **확인 필요:** 아래 항목은 아직 정해지지 않았다. 정해지면 이 절에 적는다.
-  - Jenkins가 GitHub PR 빌드를 시작하는 방법. `172.16.7.129`는 사설 IP라 GitHub의 웹훅이 바로 닿지 않는다. SCM 폴링이나 중계 같은 방법이 필요하다.
-  - Jenkins 접속 포트와 URL
-  - 빌드 결과를 GitHub PR 상태로 보고하는 방법
+  3. `mypy` (strict, 명시적 Any 금지)
+  4. `python -m pytest --cov --cov-branch --cov-fail-under=100`
+  5. `python -m tools.check_metrics src tools`
+- **Python 경로:** Jenkinsfile 기본값은 `C:\Users\user\AppData\Local\Programs\Python\Python312\python.exe`이다. Jenkins 전역 환경 변수 `PYTHON312`로 바꿀 수 있다.
+- **빌드 결과 확인:** `GET http://172.16.7.129/job/ClaudePython/job/<브랜치 또는 PR-n>/lastBuild/api/json`. Basic 인증 `admin:%JENKINS_API_TOKEN%`. 스캔을 바로 돌리려면 `POST /job/ClaudePython/build`.
 
 ## 기타
 

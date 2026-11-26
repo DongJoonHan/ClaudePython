@@ -26,9 +26,36 @@ extend-exclude = [".claude", "OEM"]
 
 [tool.ruff.lint]
 # E/W: pycodestyle, F: pyflakes, I: import 정렬, N: Google 명명 규칙(pep8-naming),
-# B: bugbear, C90: 순환복잡도, UP: 최신 문법, SIM: 단순화
+# B: bugbear, C90: 순환복잡도, UP: 최신 문법, SIM: 단순화,
+# ANN: 타입 표기, S: 보안, BLE: 예외 전체 삼킴, PLW: global 등, TID: 금지 API,
+# RUF: Ruff 전용 규칙 (SAP-ECL-001 4절)
 # D(pydocstyle)는 Doxygen 주석 스타일과 충돌하므로 사용하지 않는다.
-select = ["E", "W", "F", "I", "N", "B", "C90", "UP", "SIM"]
+select = [
+    "E", "W", "F", "I", "N", "B", "C90", "UP", "SIM",
+    "ANN", "S", "BLE", "PLW", "TID", "RUF",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# 테스트: assert 사용(S101)과 테스트 함수 타입 표기(ANN) 허용
+"tests/**" = ["S101", "ANN"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 10
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+# SAP-ECL-001 PS-02: 결정론·단일 스레드·외부 영향 차단
+"time".msg = "결정론 위반: 시각은 now_s 인자로만 받는다 (AP-02)"
+"random".msg = "결정론 위반 (AP-02)"
+"threading".msg = "단일 스레드 원칙 위반 (AD-03)"
+"asyncio".msg = "단일 스레드 원칙 위반 (AD-03)"
+"multiprocessing".msg = "단일 스레드 원칙 위반 (AD-03)"
+"subprocess".msg = "외부 프로세스 실행 금지 (PS-02)"
+"pickle".msg = "역직렬화 금지 (PS-02)"
+"os".msg = "외부 환경 의존 금지 (PS-02)"
+
+[tool.mypy]
+strict = true
+disallow_any_explicit = true
+warn_unreachable = true
+files = ["src", "tools"]
+python_version = "3.12"
