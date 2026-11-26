@@ -175,3 +175,24 @@ def test_main_reports_missing_path_as_violation(tmp_path, capsys):
     out = capsys.readouterr().out
     assert f"{missing}: 경로가 없습니다" in out
     assert "위반 1건" in out
+
+
+def test_end_line_falls_back_to_start_line_when_end_is_missing():
+    # ast.parse는 항상 end_lineno를 채우지만, 직접 만든 노드에는 없을 수 있다
+    import ast
+
+    from tools.check_metrics import _end_line
+
+    node = ast.Pass(
+        lineno=7, col_offset=0, end_lineno=None, end_col_offset=None
+    )
+    assert _end_line(node) == 7
+
+
+def test_end_line_uses_end_line_when_present():
+    import ast
+
+    from tools.check_metrics import _end_line
+
+    node = ast.Pass(lineno=3, col_offset=0, end_lineno=5, end_col_offset=0)
+    assert _end_line(node) == 5

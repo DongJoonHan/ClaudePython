@@ -3,7 +3,8 @@
 
 CLAUDE.md의 소스코드 품질 기준을 측정한다.
 - 함수 길이: 빈 줄, 주석 줄, docstring 줄을 뺀 순수 코드 줄 수 (50줄 이하)
-- 주석률: (주석 줄 ∪ docstring 줄) ÷ 빈 줄을 뺀 전체 줄 (파일마다 20% 이상)
+- 주석률: (주석 줄과 docstring 줄의 합집합) ÷ 빈 줄을 뺀 전체 줄
+  (파일마다 20% 이상)
 
 사용법: python -m tools.check_metrics src tools
 """
@@ -38,6 +39,17 @@ _DOC_OWNERS = (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
 _FUNCTIONS = (ast.FunctionDef, ast.AsyncFunctionDef)
 
 
+def _end_line(node: ast.stmt) -> int:
+    """!
+    @brief 노드의 마지막 줄 번호를 구한다.
+    @param node 문장 노드
+    @return end_lineno, 없으면 시작 줄 번호
+    """
+    if node.end_lineno is None:
+        return node.lineno
+    return node.end_lineno
+
+
 def _docstring_lines(tree: ast.AST) -> set[int]:
     """!
     @brief 모듈, 클래스, 함수 docstring이 차지하는 줄 번호를 모은다.
@@ -48,7 +60,7 @@ def _docstring_lines(tree: ast.AST) -> set[int]:
     for node in ast.walk(tree):
         if isinstance(node, _DOC_OWNERS) and ast.get_docstring(node):
             expr = node.body[0]
-            lines.update(range(expr.lineno, expr.end_lineno + 1))
+            lines.update(range(expr.lineno, _end_line(expr) + 1))
     return lines
 
 
@@ -72,7 +84,7 @@ def _code_lines(source: str, doc_lines: set[int]) -> set[int]:
 
 def _walk_functions(
     node: ast.AST, prefix: str
-) -> Iterator[tuple[str, ast.AST]]:
+) -> Iterator[tuple[str, ast.FunctionDef | ast.AsyncFunctionDef]]:
     """!
     @brief 함수 노드를 정규화된 이름(클래스.메서드.내부함수)과 함께 순회한다.
     @param node 탐색을 시작할 노드
@@ -94,7 +106,7 @@ def comment_ratio(source: str) -> float | None:
     """!
     @brief 주석률을 계산한다.
 
-    주석률 = (주석 토큰이 있는 줄 ∪ docstring 줄) ÷ 빈 줄을 뺀 전체 줄
+    주석률 = (주석 토큰이 있는 줄과 docstring 줄의 합집합) ÷ 빈 줄을 뺀 전체 줄
     @param source 분석할 Python 소스
     @return 0.0~1.0 주석률, 빈 줄만 있는 소스는 None
     """
@@ -117,7 +129,7 @@ def function_lengths(source: str) -> list[tuple[str, int, int]]:
     code = _code_lines(source, _docstring_lines(tree))
     result = []
     for name, func in _walk_functions(tree, ""):
-        span = range(func.lineno, func.end_lineno + 1)
+        span = range(func.lineno, _end_line(func) + 1)
         result.append((name, func.lineno, sum(1 for n in span if n in code)))
     return result
 
