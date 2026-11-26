@@ -25,6 +25,8 @@ ClaudePython: AI를 이용한 파이썬 코드(강사용). 강의용 Python 예�
   - 검사: `python -m ruff check .`
   - 포맷 확인: `python -m ruff format --check .`
   - 타입 검사: `python -m mypy`
+- **인코딩:** 이 PC의 기본 인코딩은 cp949다. 한글이 든 파일을 읽는 도구(cyclonedx 등)를 돌릴 때는 `$env:PYTHONUTF8='1'`, 출력에 한글이 있으면 `$env:PYTHONIOENCODING='utf-8'`을 설정한다. Jenkinsfile에는 이미 설정돼 있다.
+- **SBOM:** `docs/04_swe4_unit_test/sbom-*.cdx.json`. 재생성 방법은 단위 시험 보고서 6장에 있다.
 - **함수 길이·주석률:** `python -m tools.check_metrics src tools`로 측정한다. 위반이 있으면 종료 코드가 1이다.
 - **디렉터리:**
 
