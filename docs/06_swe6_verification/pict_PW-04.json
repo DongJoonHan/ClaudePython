@@ -1,0 +1,111 @@
+{
+  "model_file": "D:\\Repo\\ClaudePython\\docs\\06_swe6_verification\\model_PW-04.txt",
+  "model_text": "context: NORMAL, FAULT, PENDING, OFF\r\ncmd: lock_all, unlock_all, unlock_left\r\nspeed: 0.0, 5.0\r\nisofix_left: T, F\r\nrisk_left: T, F\r\nprior: RELEASE, LOCK\r\n",
+  "command": "pict model_PW-04.txt /o:2 /r:7",
+  "header": [
+    "context",
+    "cmd",
+    "speed",
+    "isofix_left",
+    "risk_left",
+    "prior"
+  ],
+  "rows": [
+    {
+      "context": "NORMAL",
+      "cmd": "lock_all",
+      "speed": "5.0",
+      "isofix_left": "T",
+      "risk_left": "F",
+      "prior": "LOCK"
+    },
+    {
+      "context": "FAULT",
+      "cmd": "lock_all",
+      "speed": "0.0",
+      "isofix_left": "F",
+      "risk_left": "T",
+      "prior": "RELEASE"
+    },
+    {
+      "context": "OFF",
+      "cmd": "unlock_all",
+      "speed": "5.0",
+      "isofix_left": "F",
+      "risk_left": "F",
+      "prior": "RELEASE"
+    },
+    {
+      "context": "FAULT",
+      "cmd": "unlock_left",
+      "speed": "5.0",
+      "isofix_left": "T",
+      "risk_left": "T",
+      "prior": "LOCK"
+    },
+    {
+      "context": "NORMAL",
+      "cmd": "unlock_left",
+      "speed": "0.0",
+      "isofix_left": "F",
+      "risk_left": "F",
+      "prior": "RELEASE"
+    },
+    {
+      "context": "FAULT",
+      "cmd": "unlock_all",
+      "speed": "0.0",
+      "isofix_left": "T",
+      "risk_left": "F",
+      "prior": "LOCK"
+    },
+    {
+      "context": "PENDING",
+      "cmd": "unlock_all",
+      "speed": "5.0",
+      "isofix_left": "T",
+      "risk_left": "T",
+      "prior": "RELEASE"
+    },
+    {
+      "context": "OFF",
+      "cmd": "unlock_left",
+      "speed": "0.0",
+      "isofix_left": "T",
+      "risk_left": "T",
+      "prior": "LOCK"
+    },
+    {
+      "context": "PENDING",
+      "cmd": "unlock_left",
+      "speed": "0.0",
+      "isofix_left": "F",
+      "risk_left": "F",
+      "prior": "LOCK"
+    },
+    {
+      "context": "OFF",
+      "cmd": "lock_all",
+      "speed": "0.0",
+      "isofix_left": "F",
+      "risk_left": "T",
+      "prior": "RELEASE"
+    },
+    {
+      "context": "NORMAL",
+      "cmd": "unlock_all",
+      "speed": "5.0",
+      "isofix_left": "T",
+      "risk_left": "T",
+      "prior": "LOCK"
+    },
+    {
+      "context": "PENDING",
+      "cmd": "lock_all",
+      "speed": "0.0",
+      "isofix_left": "F",
+      "risk_left": "T",
+      "prior": "RELEASE"
+    }
+  ]
+}

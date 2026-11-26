@@ -1,0 +1,88 @@
+{
+  "model_file": "D:\\Repo\\ClaudePython\\docs\\06_swe6_verification\\model_PW-03.txt",
+  "model_text": "fire: T, F\r\novt: T, F\r\nadult: T, F\r\nisofix_left: T, F\r\nrisk_left: T, F\r\nspeed: 0.0, 5.0\r\ncmd: none, lock_all, unlock_all\r\n",
+  "command": "pict model_PW-03.txt /o:2 /r:7",
+  "header": [
+    "fire",
+    "ovt",
+    "adult",
+    "isofix_left",
+    "risk_left",
+    "speed",
+    "cmd"
+  ],
+  "rows": [
+    {
+      "fire": "F",
+      "ovt": "T",
+      "adult": "F",
+      "isofix_left": "T",
+      "risk_left": "F",
+      "speed": "5.0",
+      "cmd": "none"
+    },
+    {
+      "fire": "T",
+      "ovt": "F",
+      "adult": "T",
+      "isofix_left": "F",
+      "risk_left": "T",
+      "speed": "0.0",
+      "cmd": "unlock_all"
+    },
+    {
+      "fire": "T",
+      "ovt": "F",
+      "adult": "F",
+      "isofix_left": "F",
+      "risk_left": "T",
+      "speed": "5.0",
+      "cmd": "none"
+    },
+    {
+      "fire": "T",
+      "ovt": "T",
+      "adult": "T",
+      "isofix_left": "T",
+      "risk_left": "F",
+      "speed": "0.0",
+      "cmd": "none"
+    },
+    {
+      "fire": "F",
+      "ovt": "T",
+      "adult": "T",
+      "isofix_left": "T",
+      "risk_left": "T",
+      "speed": "5.0",
+      "cmd": "unlock_all"
+    },
+    {
+      "fire": "F",
+      "ovt": "F",
+      "adult": "F",
+      "isofix_left": "F",
+      "risk_left": "F",
+      "speed": "0.0",
+      "cmd": "unlock_all"
+    },
+    {
+      "fire": "T",
+      "ovt": "F",
+      "adult": "T",
+      "isofix_left": "T",
+      "risk_left": "T",
+      "speed": "0.0",
+      "cmd": "lock_all"
+    },
+    {
+      "fire": "F",
+      "ovt": "T",
+      "adult": "F",
+      "isofix_left": "F",
+      "risk_left": "F",
+      "speed": "5.0",
+      "cmd": "lock_all"
+    }
+  ]
+}

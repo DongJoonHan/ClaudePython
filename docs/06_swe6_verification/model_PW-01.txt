@@ -1,0 +1,4 @@
+﻿source: physical_button, avn, voice, mobile_app
+side: left, right, all
+prior_left: RELEASE, LOCK
+prior_right: RELEASE, LOCK

@@ -1,0 +1,72 @@
+{
+  "model_file": "D:\\Repo\\ClaudePython\\docs\\06_swe6_verification\\model_PW-02.txt",
+  "model_text": "source: physical_button, avn, voice, mobile_app\r\nside: left, right, all\r\nspeed: 0.0, 2.9\r\n",
+  "command": "pict model_PW-02.txt /o:2 /r:7",
+  "header": [
+    "source",
+    "side",
+    "speed"
+  ],
+  "rows": [
+    {
+      "source": "avn",
+      "side": "left",
+      "speed": "2.9"
+    },
+    {
+      "source": "mobile_app",
+      "side": "left",
+      "speed": "0.0"
+    },
+    {
+      "source": "physical_button",
+      "side": "left",
+      "speed": "0.0"
+    },
+    {
+      "source": "voice",
+      "side": "left",
+      "speed": "2.9"
+    },
+    {
+      "source": "mobile_app",
+      "side": "all",
+      "speed": "2.9"
+    },
+    {
+      "source": "voice",
+      "side": "right",
+      "speed": "0.0"
+    },
+    {
+      "source": "avn",
+      "side": "all",
+      "speed": "0.0"
+    },
+    {
+      "source": "mobile_app",
+      "side": "right",
+      "speed": "2.9"
+    },
+    {
+      "source": "voice",
+      "side": "all",
+      "speed": "2.9"
+    },
+    {
+      "source": "physical_button",
+      "side": "all",
+      "speed": "2.9"
+    },
+    {
+      "source": "avn",
+      "side": "right",
+      "speed": "2.9"
+    },
+    {
+      "source": "physical_button",
+      "side": "right",
+      "speed": "0.0"
+    }
+  ]
+}
