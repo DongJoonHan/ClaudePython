@@ -1,0 +1,10 @@
+# Skill eval run outputs (generated; reproducible from evals/)
+.claude/skills/*-workspace/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Local Claude Code settings
+.claude/settings.local.json

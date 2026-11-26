@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: door-lock-default-format
+expected_outcome: |
+  기본 양식의 엑셀이 기능/비기능 시트로 나뉘어 생성되고, 모든 SWR-ADL 항목이 추적되며, 경계값·동치 분할이 적용되고, 다중 조건 요구사항에는 PICT 페어와이즈가 쓰이며, 엣지 케이스는 WoW 검증·제안으로 표시된다. MISRA 요구사항(SWR-ADL-010)은 시스템 테스트로 억지 케이스를 만들지 않고 검증 불가로 보고된다.
+context:
+  scaffold_script: place-files.sh

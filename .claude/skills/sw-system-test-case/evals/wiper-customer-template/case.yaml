@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: wiper-customer-template
+expected_outcome: |
+  결과 엑셀이 고객 양식의 헤더(Test ID, Requirement ID, ... Remarks)를 유지하며 채워지고, TC ID가 XYZ-SQT-### 규칙을 따른다. RW-003/RW-004 계산식의 경계(E=10/40/70, 최소 1000 ms 구간)가 경계값으로 검증되고, WiperSwitch×Sensitivity×Speed 조합에 PICT가 사용된다. 제안 케이스는 양식 안에서(예: Remarks) '제안'으로 구분된다.
+context:
+  scaffold_script: place-files.sh

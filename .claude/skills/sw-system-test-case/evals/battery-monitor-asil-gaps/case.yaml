@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: battery-monitor-asil-gaps
+expected_outcome: |
+  SWR-BVM-004의 미정의 FTTI와 SWR-BVM-009의 모호한 '강건성' 요구를 지어낸 값으로 메우지 않고 가정/질의로 명시한다. 히스테리시스(11.0/11.5 V)와 지속시간(500 ms, 1 s, 10 s)의 경계가 ADC count 단위까지 구체적으로 검증되고, ASIL C 안전 메커니즘(SWR-BVM-005)에 폴트 주입이 적용되며, SafeStateReq 래치(SWR-BVM-006)가 전원 사이클 포함으로 검증된다.
+context:
+  scaffold_script: place-files.sh
