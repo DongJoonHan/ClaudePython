@@ -6,21 +6,31 @@
 
 ClaudePython: AI를 이용한 파이썬 코드(강사용). 강의용 Python 예제 코드를 Claude와 함께 작성하는 저장소이다.
 
-현재 상태: 강의용 Python 코드는 아직 없다. 저장소에는 Claude 스킬, 서브에이전트, 설정 파일만 있다. `pyproject.toml`, Ruff 설정, `Jenkinsfile`도 아직 없으며, 코드를 처음 추가할 때 함께 만든다.
+현재 과제: OEM-SWR-001(전자식 차일드락 제어 SW, ASIL B 안전 요구 포함)을 Python PC/SIL 참조 구현과 Web 시뮬레이터로 개발한다.
+- 진행 계획과 프로젝트 결정 사항(D-01~D-06)은 `docs/00_plan/개발계획서.md`에 있다.
+- 입력 문서는 `OEM/`에 있다. 교육 과정 밖 배포가 금지된 문서라 `.gitignore`로 제외하고, GitHub 저장소는 비공개로 운영한다.
 
 ## 개발 환경
 
-- **언어:** Python 최신 안정 버전을 사용한다.
-  - 현재 개발 PC에는 Python 3.12.10이 설치되어 있다.
-  - 최소 지원 버전은 `pyproject.toml`의 `requires-python`에 명시한다.
-  - 버전을 올리면 이 항목을 갱신한다.
-- **단위 테스트:** pytest를 사용하고, 브랜치 커버리지는 pytest-cov로 측정한다.
-  - 전체 실행: `python -m pytest --cov=src --cov-branch --cov-report=term-missing --cov-fail-under=100`
+- **언어:** Python 3.12로 고정한다. OEM 요구사항이 실행 환경을 Python 3.12 PC/SIL로 지정했기 때문이다(`requires-python = ">=3.12,<3.13"`).
+- **의존성:**
+  - 런타임 의존성은 없고, 표준 라이브러리만 쓴다. Web 시뮬레이터도 `http.server`로 만든다.
+  - 개발 도구는 `requirements-dev.txt`에 버전을 고정해 둔다. 설치: `python -m pip install -r requirements-dev.txt`
+- **단위 테스트:** pytest를 쓰고, 브랜치 커버리지는 pytest-cov로 측정한다. 측정 대상(`src`, `tools`)은 `pyproject.toml`에 설정돼 있다.
+  - 전체 실행: `python -m pytest --cov --cov-branch --cov-report=term-missing --cov-fail-under=100`
   - 개별 실행: `python -m pytest tests/path/test_x.py::test_name`
-- **정적 분석:** Ruff를 사용한다. 설정은 `pyproject.toml`의 `[tool.ruff]`에 둔다.
-  - 검사: `ruff check .`
-  - 포맷 확인: `ruff format --check .`
-- **디렉터리:** 소스는 `src/`, 테스트는 `tests/`에 두고, `tests/`는 `src/`와 같은 구조로 만든다.
+- **정적 분석:** Ruff를 쓴다. 설정은 `pyproject.toml`의 `[tool.ruff]`에 있다(줄 길이 80, C901 복잡도 10).
+  - 검사: `python -m ruff check .`
+  - 포맷 확인: `python -m ruff format --check .`
+- **함수 길이·주석률:** `python -m tools.check_metrics src tools`로 측정한다. 위반이 있으면 종료 코드가 1이다.
+- **디렉터리:**
+
+  | 경로 | 내용 |
+  |---|---|
+  | `src/childlock/` | 제품 소스 |
+  | `tools/` | 개발 도구 (품질 기준 적용 대상) |
+  | `tests/` | 테스트. `src/`, `tools/`와 같은 구조로 둔다 |
+  | `docs/` | 단계별 산출물 (`00_plan`, `01_swe1_requirements` …) |
 
 ## 개발 절차
 
@@ -110,8 +120,10 @@ ClaudePython: AI를 이용한 파이썬 코드(강사용). 강의용 Python 예�
 - 파이프라인은 저장소 최상위의 `Jenkinsfile`에 정의하고, PR마다 아래 품질 게이트를 실행한다. 하나라도 실패하면 PR을 병합할 수 없다.
   1. `ruff check .`
   2. `ruff format --check .`
-  3. `python -m pytest --cov=src --cov-branch --cov-fail-under=100`
-  4. 함수 길이·주석률 측정 스크립트
+  3. `python -m pytest --cov --cov-branch --cov-fail-under=100`
+  4. `python -m tools.check_metrics src tools`
+- 현재 `Jenkinsfile`은 Linux 에이전트에 `python3.12`가 있다고 가정하고 작성했으며, Jenkins에서 실제로 돌려 보지는 않았다.
+- 연동이 확정되기 전까지는 PR을 올리기 전에 위 게이트 4개를 로컬에서 실행하고, 결과를 PR 본문에 적는다.
 - **확인 필요:** 아래 항목은 아직 정해지지 않았다. 정해지면 이 절에 적는다.
   - Jenkins가 GitHub PR 빌드를 시작하는 방법. `172.16.7.129`는 사설 IP라 GitHub의 웹훅이 바로 닿지 않는다. SCM 폴링이나 중계 같은 방법이 필요하다.
   - Jenkins 접속 포트와 URL
